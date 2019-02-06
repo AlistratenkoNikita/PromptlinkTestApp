@@ -1,70 +1,109 @@
 package collection;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class implements the {@link LimitedSet} interface.
  */
 public class LimitedSetImpl<T> implements LimitedSet<T> {
 
-    private static final int counterDefaultSize = 0;
-
-    public  Map<T, Integer> map = new HashMap<>();
-
-    @Override
-    public void add(final T t) {
-        if (!map.containsKey(t)){
-            if (map.size() == 10){
-                map.remove(findLessUsedObject());
-
-                map.put(t, counterDefaultSize);
-            } else {
-                map.put(t, counterDefaultSize);
-            }
-        }
-    }
-
-    @Override
-    public boolean remove(final T t) {
-        return map.remove(t) != null;
-    }
-
-    @Override
-    public boolean contains(final T t) {
-        if (map.containsKey(t)){
-            map.put(t, map.get(t)+1);
-
-            return true;
-        }
-
-        return false;
-    }
+    /**
+     * List to store Nodes with variable T and sort them
+     */
+    private Set<Node> set;
 
     /**
-     * Finds the least used object from the set.
-     * @return least used object from the set
+     * Map to store values' usage counter and have the access to set storing values without its counter
      */
-    private T findLessUsedObject(){
-        T lessUsedObj = null;
-        Integer lessUsedObjCounter = 0;
+    private Map<T, Integer> map;
 
-        boolean firstIteration = true;
+    private int capacity = 10;
 
-        for (Map.Entry<T, Integer> entry : map.entrySet()) {
-            if (firstIteration){
-                lessUsedObj = entry.getKey();
-                lessUsedObjCounter = entry.getValue();
-            }
+    public class Node implements Comparable{
+        T t;
+        int usageCounter;
 
-            if (entry.getValue() < lessUsedObjCounter){
-                lessUsedObj = entry.getKey();
-                lessUsedObjCounter = entry.getValue();
-            }
-
-            firstIteration = false;
+        Node(T t) {
+            this.t = t;
+            this.usageCounter = 0;
         }
 
-        return lessUsedObj;
+        Node(T t, int usageCounter) {
+            this.t = t;
+            this.usageCounter = usageCounter;
+        }
+
+        // Needs to sort items properly
+        @Override
+        public int compareTo(Object o) {
+            int compareResult;
+
+            int valueCompare = Integer.compare(t.hashCode(), ((Node) o).t.hashCode());
+            int counterCompare = Integer.compare(usageCounter, ((Node) o).usageCounter);
+
+            if (valueCompare == 0){
+                compareResult = 0;
+            } else if (counterCompare == 0) {
+                compareResult = valueCompare;
+            } else {
+                compareResult = counterCompare;
+            }
+
+            return compareResult;
+        }
+    }
+
+    public LimitedSetImpl() {
+        set = new TreeSet<>();
+        map = new HashMap<>();
+    }
+
+    public LimitedSetImpl(int capacity) {
+        this();
+        this.capacity = capacity;
+    }
+
+    @Override
+    public void add(T t) {
+        if (!map.containsKey(t)){
+            if (set.size() == capacity){
+                deleteLeastUsed();
+            }
+
+            map.put(t, 0);
+            set.add(new Node(t));
+        }
+    }
+
+    private void deleteLeastUsed() {
+        Node leastUsed = set.iterator().next();
+
+        set.remove(leastUsed);
+        map.remove(leastUsed.t);
+    }
+
+    @Override
+    public boolean remove(T t) {
+        boolean remove = map.containsKey(t) && set.remove(new Node(t, map.get(t)));
+        map.remove(t);
+
+        return remove;
+    }
+
+    @Override
+    public boolean contains(T t) {
+        boolean result = false;
+
+        if (map.containsKey(t)){
+            int usageCounter = map.get(t) + 1;
+
+            set.remove(new Node(t, map.get(t)));
+            map.put(t, usageCounter);
+            set.add(new Node(t, usageCounter));
+
+            result = true;
+        }
+
+        return result;
     }
 }

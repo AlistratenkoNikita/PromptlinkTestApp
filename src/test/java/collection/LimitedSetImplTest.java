@@ -2,14 +2,14 @@ package collection;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class LimitedSetImplTest {
 
-    String string1 = "a1";
-    String string2 = "a2";
+    private String string1 = "a1";
 
-    LimitedSetImpl<String> set = new LimitedSetImpl<>();
+    private LimitedSetImpl<String> set = new LimitedSetImpl<>(10_000_000);
 
     @Test
     public void testDefaultAdding() {
@@ -22,6 +22,7 @@ public class LimitedSetImplTest {
     public void testAddingCheckForAbsent() {
         set.add(string1);
 
+        String string2 = "a2";
         assertFalse(set.contains(string2));
     }
 
@@ -38,8 +39,6 @@ public class LimitedSetImplTest {
         assertFalse(set.contains("10"));
         assertTrue(set.contains("11"));
     }
-
-
 
     @Test
     public void remove() {
